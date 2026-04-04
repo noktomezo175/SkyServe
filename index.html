@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SkyServe E175 Final Stable</title>
+    <title>SkyServe E175 V4 - POS System</title>
     <style>
         :root {
             --bg: #121212; --card: #1e1e1e; --text: #ffffff;
@@ -40,22 +40,30 @@
         
         .stepper-row { display: flex; align-items: center; justify-content: space-between; background: #34495e; margin-bottom: 6px; padding: 8px; border-radius: 8px; }
         .step-btn { background: #1e1e1e; color: white; border: 1px solid #555; width: 35px; height: 35px; border-radius: 50%; font-size: 20px; }
+        
+        /* 3x3 Grid Specifically */
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-        .menu-item { background: var(--btn-gray); padding: 14px 2px; border-radius: 8px; text-align: center; font-size: 11px; border: none; color: white; }
-        .meal-btn { background: var(--meal-orange); font-weight: bold; }
-        .close-btn { background: var(--order-green); padding: 16px; border-radius: 12px; border: none; font-weight: bold; width: 100%; margin-top: 15px; }
+        .menu-item { background: var(--btn-gray); padding: 14px 2px; border-radius: 8px; text-align: center; font-size: 11px; border: none; color: white; font-weight: bold; }
+        .menu-item:active { background: #555; }
+        
+        .folder-btn { background: #2980b9; } /* Blue for folders */
+        .direct-btn { background: #27ae60; } /* Green for direct add */
+        .meal-btn { background: var(--meal-orange); }
+        
+        .close-btn { background: var(--order-green); padding: 16px; border-radius: 12px; border: none; font-weight: bold; width: 100%; margin-top: 15px; color: black; }
+        .back-btn { background: #555; padding: 12px; border-radius: 8px; border: none; font-weight: bold; width: 100%; margin-bottom: 10px; color: white; }
     </style>
 </head>
 <body>
     <div id="overlay" class="overlay" onclick="closePanel()"></div>
 
     <div id="mod-coffee" class="mod-panel">
-        <h3 style="text-align:center; color: var(--modifier); margin-top:0;">Prep</h3>
-        <button onclick="addOrder('Coffee (Black)'); closeMod();" style="width:100%; padding:12px; margin-bottom:10px; background:#111; color:white; border:1px solid #555; border-radius:8px;">JUST BLACK</button>
+        <h3 id="hot-title" style="text-align:center; color: var(--modifier); margin-top:0;">Prep</h3>
+        <button onclick="saveHotDrink(true)" style="width:100%; padding:12px; margin-bottom:10px; background:#111; color:white; border:1px solid #555; border-radius:8px;">JUST PLAIN</button>
         <div class="stepper-row"><span>Creamers</span><div><button class="step-btn" onclick="adj('c',-1)">-</button><span id="v-c" style="margin:0 15px; font-weight:bold; color:var(--modifier);">0</span><button class="step-btn" onclick="adj('c',1)">+</button></div></div>
         <div class="stepper-row"><span>Sugars</span><div><button class="step-btn" onclick="adj('sg',-1)">-</button><span id="v-sg" style="margin:0 15px; font-weight:bold; color:var(--modifier);">0</span><button class="step-btn" onclick="adj('sg',1)">+</button></div></div>
         <div class="stepper-row"><span>Sweetener</span><div><button class="step-btn" onclick="adj('sw',-1)">-</button><span id="v-sw" style="margin:0 15px; font-weight:bold; color:var(--modifier);">0</span><button class="step-btn" onclick="adj('sw',1)">+</button></div></div>
-        <button class="close-btn" style="background:var(--modifier); color:black;" onclick="saveCoffee()">ADD COFFEE</button>
+        <button class="close-btn" style="background:var(--modifier); color:black;" onclick="saveHotDrink(false)">ADD DRINK</button>
     </div>
 
     <div id="mod-gen" class="mod-panel">
@@ -91,23 +99,35 @@
         
         <div id="m-ui" style="display:none;">
             <div style="font-size:10px; color:#888; margin:10px 0 5px 0;">🍱 MEALS</div>
-            <div class="menu-grid">
+            <div class="menu-grid" style="margin-bottom: 15px;">
                 <button id="bA" class="menu-item meal-btn" onclick="addMeal('Option A')">Meal A</button>
                 <button id="bB" class="menu-item meal-btn" onclick="addMeal('Option B')">Meal B</button>
                 <button class="menu-item meal-btn" style="background:#8e44ad" onclick="addOrder('Special Meal')">Special</button>
             </div>
         </div>
 
-        <div style="font-size:10px; color:#888; margin:15px 0 5px 0; letter-spacing: 1px;">⚡ QUICK ACTIONS</div>
-        <div class="menu-grid" id="m-quick"></div>
+        <div id="view-main">
+            <div style="font-size:10px; color:#888; margin:0 0 5px 0; letter-spacing: 1px;">DRINKS</div>
+            <div class="menu-grid">
+                <button class="menu-item direct-btn" onclick="quickAdd('Water')">Water</button>
+                <button class="menu-item" onclick="openHot('Coffee')">Coffee</button>
+                <button class="menu-item" onclick="openHot('Tea')">Tea</button>
+                
+                <button class="menu-item direct-btn" onclick="quickAdd('Just Ice')">Just Ice</button>
+                <button class="menu-item" onclick="quickAdd('Other')">Other ⌨️</button>
+                <button class="menu-item folder-btn" onclick="openSub('soda', '🥤 Sodas')">Soda ➔</button>
+                
+                <button class="menu-item folder-btn" onclick="openSub('juice', '🧃 Juices')">Juice ➔</button>
+                <button class="menu-item folder-btn" onclick="openSub('mixers', '🍋 Mixers')">Mixers ➔</button>
+                <button class="menu-item folder-btn" onclick="openSub('alc', '🍷 Alcohol')">Alcohol ➔</button>
+            </div>
+        </div>
 
-        <div style="font-size:10px; color:#888; margin:15px 0 5px 0; letter-spacing: 1px;">🥤 SODAS, JUICES & MIXERS</div>
-        <div class="menu-grid" id="m-soda"></div>
-        <div class="menu-grid" id="m-juice" style="margin-top:6px;"></div>
-        <div class="menu-grid" id="m-mixers" style="margin-top:6px;"></div>
-
-        <div style="font-size:10px; color:#888; margin:15px 0 5px 0; letter-spacing: 1px;">🍷 ALCOHOL</div>
-        <div class="menu-grid" id="m-alc" style="margin-top:6px;"></div>
+        <div id="view-sub" style="display:none;">
+            <button class="back-btn" onclick="closeSub()">🔙 BACK TO MAIN</button>
+            <div style="font-size:12px; color:#aaa; margin:0 0 8px 0; font-weight:bold;" id="sub-title">Category</div>
+            <div class="menu-grid" id="sub-items"></div>
+        </div>
 
         <button class="close-btn" onclick="closePanel()">SAVE & CLOSE</button>
         <button onclick="clearSeat()" style="width:100%; background:none; color:#ff4757; border:none; margin-top:15px; font-size:11px;">Clear Seat</button>
@@ -115,32 +135,35 @@
 
     <script>
         let currC = 'AA', selS = null, data = {}, mA = 7, mB = 5, cQ = {c:0, sg:0, sw:0}, pItem = "";
+        let currentHotDrink = "Coffee"; // Tracks if they clicked Coffee or Tea
         
-        // NEW UPDATED MENUS OBJECT
         const menus = {
             AA: { 
-                quick: ["Water", "Coffee", "Tea", "Just Ice", "Other"],
                 soda: ["Coke", "Diet Coke", "Coke Zero", "Sprite", "Ginger Ale", "Club Soda", "Tonic"],
                 juice: ["Orange", "Apple", "Tomato", "Cranberry"],
                 mixers: ["Dr Pepper", "Diet Dr Pepper"],
                 alc: ["Beer", "White Wine", "Red Wine", "Vodka", "Gin", "Rum", "Bourbon", "Scotch"] 
             },
             DL: { 
-                quick: ["Water", "Starbucks", "Tea", "Other"],
                 soda: ["Coke", "Coke Zero", "Diet Coke", "Fresca", "Ginger Ale"],
                 juice: ["OJ", "Apple", "Tomato", "Cranberry"],
                 mixers: [],
                 alc: ["Buffalo Trace", "Bombay", "Tip Top Marg", "Tip Top Espresso", "SweetWater", "Wine"] 
             },
             UA: { 
-                quick: ["Water", "illy Coffee", "Tea", "Other"],
                 soda: ["Coke", "Zero Sugar", "Diet Coke", "Sprite", "Ginger Ale"],
                 juice: ["Tomato J", "OJ", "Apple", "Cranberry"],
                 mixers: ["AHA Spark"],
                 alc: ["Wheatley", "Jack", "Buffalo Trace", "White Claw", "Miller Lite", "Wine"] 
             }
         };
-        const mods = { soft: ["Ice", "No Ice", "Light Ice"], alc: ["Ice", "Neat"], beer: ["Cup", "Can"] };
+        
+        // Modifiers for the sub-menus
+        const mods = { 
+            soft: ["Ice", "No Ice", "Light Ice"], 
+            alc: ["Ice", "Neat"], 
+            beer: ["Cup", "Can"] 
+        };
 
         function render() {
             const container = document.getElementById('cabin-map');
@@ -177,81 +200,101 @@
             selS = id; if(!data[id]) data[id] = {name:'', orders:[]};
             document.getElementById('p-title').innerText = `Seat ${id}`;
             document.getElementById('p-name').value = data[id].name;
+            closeSub(); // Always ensure we open to the Main 3x3 Grid
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('order-panel').classList.add('open');
             togMeal();
         }
 
-        // NEW ENGINE THAT BUILDS ALL 5 CATEGORIES
         function setCarrier(c) {
             currC = c; 
             document.querySelectorAll('.carrier-btn').forEach(b => b.classList.toggle('active', b.classList.contains(c.toLowerCase())));
-            
-            const cats = ['quick', 'soda', 'juice', 'mixers', 'alc'];
-            cats.forEach(cat => {
-                const el = document.getElementById('m-' + cat);
-                if(el) {
-                    el.innerHTML = '';
-                    if(menus[c][cat]) {
-                        menus[c][cat].forEach(i => {
-                            const b = document.createElement('button'); 
-                            b.className = 'menu-item'; 
-                            
-                            // Make the Quick Hits button pop visually
-                            if(cat === 'quick') {
-                                b.style.backgroundColor = '#005daa';
-                                b.style.fontWeight = 'bold';
-                            }
-                            
-                            b.innerText = i;
-                            b.onclick = () => {
-                                // Custom Logic for "Other" and "Just Ice"
-                                if (i === "Other") {
-                                    let custom = prompt("Enter special request:");
-                                    if (custom) addOrder(custom);
-                                    return;
-                                }
-                                if (i === "Just Ice") {
-                                    addOrder("Just Ice");
-                                    return;
-                                }
-                                
-                                // Standard Logic
-                                if (i.toLowerCase().match(/coffee|starbucks|illy|tea/)) {
-                                    openCoff();
-                                } else {
-                                    let t = cat === 'alc' ? (i.toLowerCase().match(/lite|water|na|claw|sweetwater|beer/) ? 'beer' : 'alc') : 'soft';
-                                    openGen(i, t);
-                                }
-                            };
-                            el.appendChild(b);
-                        });
-                    }
-                }
-            });
+            closeSub(); // Reset view if they swap airlines while panel is open
         }
 
-        function openCoff() { cQ = {c:0, sg:0, sw:0}; upC(); document.getElementById('mod-coffee').classList.add('active'); }
+        // --- DIRECT ADD ACTIONS (Water, Ice, Other) ---
+        function quickAdd(item) {
+            if (item === "Other") {
+                let custom = prompt("Enter special request:");
+                if (custom) addOrder(custom);
+            } else {
+                addOrder(item);
+            }
+        }
+
+        // --- HOT DRINKS (Coffee & Tea) ---
+        function openHot(type) { 
+            currentHotDrink = type; // Save if it's Coffee or Tea
+            cQ = {c:0, sg:0, sw:0}; upC(); 
+            document.getElementById('hot-title').innerText = type + " Prep";
+            document.getElementById('mod-coffee').classList.add('active'); 
+        }
         function adj(t, d) { cQ[t] = Math.max(0, Math.min(5, cQ[t]+d)); upC(); }
         function upC() { document.getElementById('v-c').innerText = cQ.c; document.getElementById('v-sg').innerText = cQ.sg; document.getElementById('v-sw').innerText = cQ.sw; }
         
-        function saveCoffee() {
-            let p = [], l = currC === 'DL' ? 'Starbucks' : (currC === 'UA' ? 'illy' : 'Coffee');
-            if(cQ.c) p.push(cQ.c+' Cr'); if(cQ.sg) p.push(cQ.sg+' Sug'); if(cQ.sw) p.push(cQ.sw+' Swt');
-            addOrder(p.length ? `${l} (${p.join('/')})` : l); closeMod();
+        function saveHotDrink(isPlain) {
+            let label = currentHotDrink; // Coffee or Tea
+            if (currentHotDrink === 'Coffee') {
+                label = currC === 'DL' ? 'Starbucks' : (currC === 'UA' ? 'illy' : 'Coffee');
+            }
+            
+            if (isPlain) {
+                addOrder(label + " (Plain)");
+            } else {
+                let p = [];
+                if(cQ.c) p.push(cQ.c+' Cr'); if(cQ.sg) p.push(cQ.sg+' Sug'); if(cQ.sw) p.push(cQ.sw+' Swt');
+                addOrder(p.length ? `${label} (${p.join('/')})` : label);
+            }
+            closeMod();
         }
 
+        // --- SUB-MENUS (Folders) ---
+        function openSub(cat, title) {
+            document.getElementById('view-main').style.display = 'none';
+            document.getElementById('view-sub').style.display = 'block';
+            document.getElementById('sub-title').innerText = title;
+            
+            const container = document.getElementById('sub-items');
+            container.innerHTML = '';
+            
+            menus[currC][cat].forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'menu-item';
+                btn.innerText = item;
+                btn.onclick = () => {
+                    // Logic for modifiers based on category
+                    if (cat === 'soda' || cat === 'mixers') {
+                        openGen(item, 'soft'); // Triggers Ice/No Ice
+                    } else if (cat === 'juice') {
+                        addOrder(item); // Juice usually direct, change to 'soft' if you want ice prompt
+                    } else if (cat === 'alc') {
+                        // Check if it's a beer to trigger Can/Cup, otherwise Ice/Neat
+                        let t = item.toLowerCase().match(/lite|water|na|claw|sweetwater|beer/i) ? 'beer' : 'alc';
+                        openGen(item, t);
+                    }
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function closeSub() {
+            document.getElementById('view-sub').style.display = 'none';
+            document.getElementById('view-main').style.display = 'block';
+        }
+
+        // --- GENERIC MODIFIERS (Ice, Neat, Can, etc.) ---
         function openGen(i, t) {
             pItem = i; const g = document.getElementById('gen-options'); g.innerHTML = '';
             document.getElementById('gen-title').innerText = i;
             mods[t].forEach(m => {
                 const b = document.createElement('button'); b.className = 'menu-item'; b.innerText = m;
-                b.onclick = () => { addOrder(`${pItem} (${m})`); closeMod(); };
+                b.onclick = () => { addOrder(`${pItem} (${m})`); closeMod(); closeSub(); }; // Close both panels
                 g.appendChild(b);
             });
             document.getElementById('mod-gen').classList.add('active');
         }
 
+        // --- CORE FUNCTIONS ---
         function addOrder(i) { data[selS].orders.push(i); render(); }
         
         function addMeal(t) {
