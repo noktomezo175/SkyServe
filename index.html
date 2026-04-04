@@ -102,4 +102,205 @@
         <div class="menu-grid" id="m-quick"></div>
 
         <div style="font-size:10px; color:#888; margin:15px 0 5px 0; letter-spacing: 1px;">🥤 SODAS, JUICES & MIXERS</div>
-        <div class="menu-grid" id="m-s
+        <div class="menu-grid" id="m-soda"></div>
+        <div class="menu-grid" id="m-juice" style="margin-top:6px;"></div>
+        <div class="menu-grid" id="m-mixers" style="margin-top:6px;"></div>
+
+        <div style="font-size:10px; color:#888; margin:15px 0 5px 0; letter-spacing: 1px;">🍷 ALCOHOL</div>
+        <div class="menu-grid" id="m-alc" style="margin-top:6px;"></div>
+
+        <button class="close-btn" onclick="closePanel()">SAVE & CLOSE</button>
+        <button onclick="clearSeat()" style="width:100%; background:none; color:#ff4757; border:none; margin-top:15px; font-size:11px;">Clear Seat</button>
+    </div>
+
+    <script>
+        let currC = 'AA', selS = null, data = {}, mA = 7, mB = 5, cQ = {c:0, sg:0, sw:0}, pItem = "";
+        
+        // NEW UPDATED MENUS OBJECT
+        const menus = {
+            AA: { 
+                quick: ["Water", "Coffee", "Tea", "Just Ice", "Other"],
+                soda: ["Coke", "Diet Coke", "Coke Zero", "Sprite", "Ginger Ale", "Club Soda", "Tonic"],
+                juice: ["Orange", "Apple", "Tomato", "Cranberry"],
+                mixers: ["Dr Pepper", "Diet Dr Pepper"],
+                alc: ["Beer", "White Wine", "Red Wine", "Vodka", "Gin", "Rum", "Bourbon", "Scotch"] 
+            },
+            DL: { 
+                quick: ["Water", "Starbucks", "Tea", "Other"],
+                soda: ["Coke", "Coke Zero", "Diet Coke", "Fresca", "Ginger Ale"],
+                juice: ["OJ", "Apple", "Tomato", "Cranberry"],
+                mixers: [],
+                alc: ["Buffalo Trace", "Bombay", "Tip Top Marg", "Tip Top Espresso", "SweetWater", "Wine"] 
+            },
+            UA: { 
+                quick: ["Water", "illy Coffee", "Tea", "Other"],
+                soda: ["Coke", "Zero Sugar", "Diet Coke", "Sprite", "Ginger Ale"],
+                juice: ["Tomato J", "OJ", "Apple", "Cranberry"],
+                mixers: ["AHA Spark"],
+                alc: ["Wheatley", "Jack", "Buffalo Trace", "White Claw", "Miller Lite", "Wine"] 
+            }
+        };
+        const mods = { soft: ["Ice", "No Ice", "Light Ice"], alc: ["Ice", "Neat"], beer: ["Cup", "Can"] };
+
+        function render() {
+            const container = document.getElementById('cabin-map');
+            if(!container) return;
+            container.innerHTML = '';
+            for (let r = 1; r <= 4; r++) {
+                const row = document.createElement('div'); 
+                row.className = 'row';
+                const seatLayout = ['A', 'aisle', 'D', 'F'];
+                seatLayout.forEach(p => {
+                    if (p === 'aisle') {
+                        const aDiv = document.createElement('div');
+                        aDiv.className = 'aisle';
+                        row.appendChild(aDiv);
+                    } else {
+                        const id = r + p;
+                        if (!data[id]) data[id] = { name: '', orders: [] };
+                        const d = data[id];
+                        const sDiv = document.createElement('div');
+                        sDiv.className = `seat ${d.orders.length ? 'has-order' : ''}`;
+                        sDiv.onclick = () => openP(id);
+                        sDiv.innerHTML = `
+                            <div style="display:flex"><span class="seat-label">${id}</span><span class="pax-name">${d.name}</span></div>
+                            <div class="order-display">${d.orders.map(i => '• ' + i).join('<br>')}</div>
+                        `;
+                        row.appendChild(sDiv);
+                    }
+                });
+                container.appendChild(row);
+            }
+        }
+
+        function openP(id) {
+            selS = id; if(!data[id]) data[id] = {name:'', orders:[]};
+            document.getElementById('p-title').innerText = `Seat ${id}`;
+            document.getElementById('p-name').value = data[id].name;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('order-panel').classList.add('open');
+            togMeal();
+        }
+
+        // NEW ENGINE THAT BUILDS ALL 5 CATEGORIES
+        function setCarrier(c) {
+            currC = c; 
+            document.querySelectorAll('.carrier-btn').forEach(b => b.classList.toggle('active', b.classList.contains(c.toLowerCase())));
+            
+            const cats = ['quick', 'soda', 'juice', 'mixers', 'alc'];
+            cats.forEach(cat => {
+                const el = document.getElementById('m-' + cat);
+                if(el) {
+                    el.innerHTML = '';
+                    if(menus[c][cat]) {
+                        menus[c][cat].forEach(i => {
+                            const b = document.createElement('button'); 
+                            b.className = 'menu-item'; 
+                            
+                            // Make the Quick Hits button pop visually
+                            if(cat === 'quick') {
+                                b.style.backgroundColor = '#005daa';
+                                b.style.fontWeight = 'bold';
+                            }
+                            
+                            b.innerText = i;
+                            b.onclick = () => {
+                                // Custom Logic for "Other" and "Just Ice"
+                                if (i === "Other") {
+                                    let custom = prompt("Enter special request:");
+                                    if (custom) addOrder(custom);
+                                    return;
+                                }
+                                if (i === "Just Ice") {
+                                    addOrder("Just Ice");
+                                    return;
+                                }
+                                
+                                // Standard Logic
+                                if (i.toLowerCase().match(/coffee|starbucks|illy|tea/)) {
+                                    openCoff();
+                                } else {
+                                    let t = cat === 'alc' ? (i.toLowerCase().match(/lite|water|na|claw|sweetwater|beer/) ? 'beer' : 'alc') : 'soft';
+                                    openGen(i, t);
+                                }
+                            };
+                            el.appendChild(b);
+                        });
+                    }
+                }
+            });
+        }
+
+        function openCoff() { cQ = {c:0, sg:0, sw:0}; upC(); document.getElementById('mod-coffee').classList.add('active'); }
+        function adj(t, d) { cQ[t] = Math.max(0, Math.min(5, cQ[t]+d)); upC(); }
+        function upC() { document.getElementById('v-c').innerText = cQ.c; document.getElementById('v-sg').innerText = cQ.sg; document.getElementById('v-sw').innerText = cQ.sw; }
+        
+        function saveCoffee() {
+            let p = [], l = currC === 'DL' ? 'Starbucks' : (currC === 'UA' ? 'illy' : 'Coffee');
+            if(cQ.c) p.push(cQ.c+' Cr'); if(cQ.sg) p.push(cQ.sg+' Sug'); if(cQ.sw) p.push(cQ.sw+' Swt');
+            addOrder(p.length ? `${l} (${p.join('/')})` : l); closeMod();
+        }
+
+        function openGen(i, t) {
+            pItem = i; const g = document.getElementById('gen-options'); g.innerHTML = '';
+            document.getElementById('gen-title').innerText = i;
+            mods[t].forEach(m => {
+                const b = document.createElement('button'); b.className = 'menu-item'; b.innerText = m;
+                b.onclick = () => { addOrder(`${pItem} (${m})`); closeMod(); };
+                g.appendChild(b);
+            });
+            document.getElementById('mod-gen').classList.add('active');
+        }
+
+        function addOrder(i) { data[selS].orders.push(i); render(); }
+        
+        function addMeal(t) {
+            if(t === 'Option A' && mA > 0) { mA--; addOrder('Option A'); }
+            else if(t === 'Option B' && mB > 0) { mB--; addOrder('Option B'); }
+            upInv();
+        }
+
+        function upInv() {
+            document.getElementById('cA').innerText = mA; document.getElementById('cB').innerText = mB;
+            if(document.getElementById('bA')) document.getElementById('bA').disabled = mA <= 0; 
+            if(document.getElementById('bB')) document.getElementById('bB').disabled = mB <= 0;
+        }
+
+        function togMeal() {
+            let en = document.getElementById('mTog').checked;
+            document.getElementById('inv-bar').style.display = en ? 'flex' : 'none';
+            document.getElementById('m-ui').style.display = en ? 'block' : 'none';
+            upInv();
+        }
+
+        function setInv() { 
+            let nA = prompt("Opt A count?", mA);
+            let nB = prompt("Opt B count?", mB);
+            if(nA !== null && !isNaN(nA)) mA = parseInt(nA);
+            if(nB !== null && !isNaN(nB)) mB = parseInt(nB);
+            upInv(); 
+        }
+
+        function closeMod() { document.querySelectorAll('.mod-panel').forEach(p=>p.classList.remove('active')); }
+        function closePanel() { 
+            data[selS].name = document.getElementById('p-name').value; 
+            document.getElementById('order-panel').classList.remove('open'); 
+            document.getElementById('overlay').style.display = 'none'; 
+            closeMod(); render(); 
+        }
+
+        function clearSeat() { 
+            data[selS].orders.forEach(i => { if(i==='Option A') mA++; if(i==='Option B') mB++; }); 
+            data[selS].orders = []; upInv(); render(); 
+        }
+
+        function resetAll() { if(confirm("Clear all names, orders, and reset meals for the next leg?")) { data = {}; mA = 7; mB = 5; render(); upInv(); } }
+
+        window.onload = function() {
+            setCarrier('AA');
+            render();
+        };
+
+    </script>
+</body>
+</html>
