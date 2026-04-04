@@ -109,7 +109,7 @@
         <div id="view-main">
             <div style="font-size:10px; color:#888; margin:0 0 5px 0; letter-spacing: 1px;">DRINKS</div>
             <div class="menu-grid">
-                <button class="menu-item direct-btn" onclick="quickAdd('Water')">Water</button>
+                <button class="menu-item" onclick="openGen('Water', 'soft')">Water</button>
                 <button class="menu-item" onclick="openHot('Coffee')">Coffee</button>
                 <button class="menu-item" onclick="openHot('Tea')">Tea</button>
                 
@@ -212,7 +212,7 @@
             closeSub(); // Reset view if they swap airlines while panel is open
         }
 
-        // --- DIRECT ADD ACTIONS (Water, Ice, Other) ---
+        // --- DIRECT ADD ACTIONS (Ice, Other) ---
         function quickAdd(item) {
             if (item === "Other") {
                 let custom = prompt("Enter special request:");
@@ -266,7 +266,7 @@
                     if (cat === 'soda' || cat === 'mixers') {
                         openGen(item, 'soft'); // Triggers Ice/No Ice
                     } else if (cat === 'juice') {
-                        addOrder(item); // Juice usually direct, change to 'soft' if you want ice prompt
+                        addOrder(item); // Juice usually direct
                     } else if (cat === 'alc') {
                         // Check if it's a beer to trigger Can/Cup, otherwise Ice/Neat
                         let t = item.toLowerCase().match(/lite|water|na|claw|sweetwater|beer/i) ? 'beer' : 'alc';
