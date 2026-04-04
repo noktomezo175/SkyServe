@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Version 3 Test</title>
+    <link rel="stylesheet" href="./style.css">
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SkyServe E175 Final Stable</title>
+    <style>
+        :root {
+            --bg: #121212; --card: #1e1e1e; --text: #ffffff;
+            --accent: #3498db; --aa-red: #c3002f; --dl-blue: #003366; --ua-blue: #005daa;
+            --order-green: #2ecc71; --btn-gray: #3a3a3a; --modifier: #f1c40f; --meal-orange: #d35400;
+        }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; user-select: none; padding-bottom: 100px; }
+        .header { padding: 15px; background: var(--card); border-bottom: 1px solid #333; text-align: center; position: sticky; top: 0; z-index: 10; }
+        .carrier-toggles { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+        .carrier-btn { padding: 8px 12px; border-radius: 20px; border: none; font-weight: bold; font-size: 11px; opacity: 0.4; color: white; }
+        .carrier-btn.active { opacity: 1; transform: scale(1.05); border: 1px solid white; }
+        .aa { background: var(--aa-red); } .dl { background: var(--dl-blue); } .ua { background: var(--ua-blue); }
+        
+        <div id="inv-bar" class="inventory-bar" style="display:none;">
+    <div>Opt A: <span id="cA" class="inv-count">7</span></div>
+    <div>Opt B: <span id="cB" class="inv-count">5</span></div>
+    <button onclick="setInv()" style="background:none; border:none; color:#888; font-size:10px;">[EDIT]</button>
+</div>
+
+      
+      <div class="global-controls">
+    <span><input type="checkbox" id="mTog" onchange="togMeal()"> 900+ Mi (Meals)</span>
+    <button onclick="resetAll()" style="background:#c0392b; border:none; color:white; font-size:10px; border-radius:4px; padding:4px 10px; font-weight:bold; margin-left:10px;">
+        NEW FLIGHT
+    </button>
+</div>
+
+        .global-controls { display: flex; justify-content: center; align-items: center; gap: 15px; background: #252525; padding: 8px; font-size: 11px; }
+
+        .cabin { padding: 15px; max-width: 450px; margin: 0 auto; display: block; }
+        .row { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 12px; width: 100%; }
+        .seat { width: 95px; min-height: 105px; background: #2a2a2a; border-radius: 10px; display: flex; flex-direction: column; padding: 6px; margin: 3px; border: 1px solid #444; box-sizing: border-box; }
+        .seat.has-order { border-color: var(--order-green); background: #1a241a; }
+        .aisle { width: 30px; flex-shrink: 0; }
+        .seat-label { font-weight: bold; color: var(--accent); font-size: 16px; }
+        .pax-name { font-size: 10px; color: #888; text-align: right; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .order-display { font-size: 10px; margin-top: 4px; line-height: 1.2; color: #ddd; }
+
+        .panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-radius: 20px 20px 0 0; padding: 15px; transform: translateY(100%); transition: 0.3s; z-index: 100; max-height: 85vh; overflow-y: auto; }
+        .panel.open { transform: translateY(0); }
+        .overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); display: none; z-index: 90; }
+        
+        .mod-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2c3e50; width: 90%; max-width: 320px; border-radius: 15px; padding: 15px; z-index: 110; visibility: hidden; opacity: 0; border: 2px solid var(--modifier); }
+        .mod-panel.active { visibility: visible; opacity: 1; }
+        
+        .stepper-row { display: flex; align-items: center; justify-content: space-between; background: #34495e; margin-bottom: 6px; padding: 8px; border-radius: 8px; }
+        .step-btn { background: #1e1e1e; color: white; border: 1px solid #555; width: 35px; height: 35px; border-radius: 50%; font-size: 20px; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+        .menu-item { background: var(--btn-gray); padding: 14px 2px; border-radius: 8px; text-align: center; font-size: 11px; border: none; color: white; }
+        .meal-btn { background: var(--meal-orange); font-weight: bold; }
+        .close-btn { background: var(--order-green); padding: 16px; border-radius: 12px; border: none; font-weight: bold; width: 100%; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div id="overlay" class="overlay" onclick="closePanel()"></div>
+
+    <div id="mod-coffee" class="mod-panel">
+        <h3 style="text-align:center; color: var(--modifier); margin-top:0;">Prep</h3>
+        <button onclick="addOrder('Coffee (Black)'); closeMod();" style="width:100%; padding:12px; margin-bottom:10px; background:#111; color:white; border:1px solid #555; border-radius:8px;">JUST BLACK</button>
+        <div class="stepper-row"><span>Creamers</span><div><button class="step-btn" onclick="adj('c',-1)">-</button><span id="v-c" style="margin:0 15px; font-weight:bold; color:var(--modifier);">0</span><button class="step-btn" onclick="adj('c',1)">+</button></div></div>
+        <div class="stepper-row"><span>Sugars</span><div><button class="step-btn" onclick="adj('sg',-1)">-</button><span id="v-sg" style="margin:0 15px; font-weight:bold; color:var(--modifier);">0</span><button class="step-btn" onclick="adj('sg',1)">+</button></div></div>
+        <div class="stepper-row"><span>Sweetener</span><div><button class="step-btn" onclick="adj('sw',-1)">-</button><span id="v-sw" style="margin:0 15px; font-weight:bold; color:var(--modifier);">0</span><button class="step-btn" onclick="adj('sw',1)">+</button></div></div>
+        <button class="close-btn" style="background:var(--modifier); color:black;" onclick="saveCoffee()">ADD COFFEE</button>
+    </div>
+
+    <div id="mod-gen" class="mod-panel">
+        <h3 id="gen-title" style="text-align:center; color: var(--modifier); margin-top:0;">Options</h3>
+        <div id="gen-options" class="menu-grid"></div>
+    </div>
+
+    <div class="header">
+        <strong>Republic E175</strong>
+        <div class="carrier-toggles">
+            <button class="carrier-btn aa active" onclick="setCarrier('AA')">AA</button>
+            <button class="carrier-btn dl" onclick="setCarrier('DL')">DL</button>
+            <button class="carrier-btn ua" onclick="setCarrier('UA')">UA</button>
+        </div>
+    </div>
+
+    <div id="inv-bar" class="inventory-bar" style="display:none;">
+        <div>Meal A: <span id="cA" class="inv-count">7</span></div>
+        <div>Meal B: <span id="cB" class="inv-count">5</span></div>
+        <button onclick="setInv()" style="background:none; border:none; color:#888; font-size:10px;">[EDIT]</button>
+    </div>
+
+    <div class="global-controls">
+        <span><input type="checkbox" id="mTog" onchange="togMeal()"> 900+ Mi (Meals)</span>
+        <button onclick="resetAll()" style="background:none; border:1px solid #444; color:#666; font-size:10px; border-radius:4px; padding:2px 8px;">RESET</button>
+    </div>
+
+    <div class="cabin" id="cabin-map"></div>
+
+    <div id="order-panel" class="panel">
+        <h2 id="p-title" style="margin:0;">Seat</h2>
+        <input type="text" id="p-name" placeholder="Pax Name..." style="width:100%; padding:12px; margin:10px 0; background:#333; color:white; border:none; border-radius:8px; box-sizing:border-box;">
+        
+        <div id="m-ui" style="display:none;">
+            <div style="font-size:10px; color:#888; margin:10px 0 5px 0;">🍱 MEALS</div>
+            <div class="menu-grid">
+                <button id="bA" class="menu-item meal-btn" onclick="addMeal('Option A')">Meal A</button>
+                <button id="bB" class="menu-item meal-btn" onclick="addMeal('Option B')">Meal B</button>
+                <button class="menu-item meal-btn" style="background:#8e44ad" onclick="addOrder('Special Meal')">Special</button>
+            </div>
+        </div>
+
+        <div style="font-size:10px; color:#888; margin:15px 0 5px 0;">🥤 BEVERAGES</div>
+        <div class="menu-grid" id="m-soft"></div>
+        <div class="menu-grid" id="m-alc" style="margin-top:6px;"></div>
+
+        <button class="close-btn" onclick="closePanel()">SAVE & CLOSE</button>
+        <button onclick="clearSeat()" style="width:100%; background:none; color:#ff4757; border:none; margin-top:15px; font-size:11px;">Clear Seat</button>
+    </div>
+
+    <script>
+        let currC = 'AA', selS = null, data = {}, mA = 7, mB = 5, cQ = {c:0, sg:0, sw:0}, pItem = "";
+        const menus = {
+            AA: { s: ["Coffee","Tea","Water","Coke","Diet Coke","Coke Zero","Sprite","Sprite Zero","Ginger Ale","Dr Pepper","Diet Dr Pepper", "OJ","Apple","Cranapple","Tomato","BMM","Lacroix Lime","Lacroix Berry","Tonic","Club","Margaita Mix"], a: ["Vodka","Rum","Jack","Tequila","Miller Lite","NA Beer","Wine"] },
+            DL: { s: ["Starbucks","Water","Tea","Coke","Coke Zero","Diet Coke","Fresca","Ginger Ale"], a: ["Buffalo Trace","Bombay","Tip Top Marg","Tip Top Espresso","SweetWater","Wine"] },
+            UA: { s: ["illy Coffee","Water","AHA Spark","Coke","Zero Sugar","Diet Coke","Sprite","Tomato J"], a: ["Wheatley","Jack","Buffalo Trace","White Claw","Miller Lite","Wine"] }
+        };
+        const mods = { soft: ["Ice", "No Ice", "Light Ice"], alc: ["Ice", "Neat"], beer: ["Cup", "Can"] };
+
+        function render() {
+            const container = document.getElementById('cabin-map');
+            if(!container) return;
+            container.innerHTML = '';
+            for (let r = 1; r <= 4; r++) {
+                const row = document.createElement('div'); 
+                row.className = 'row';
+                const seatLayout = ['A', 'aisle', 'D', 'F'];
+                seatLayout.forEach(p => {
+                    if (p === 'aisle') {
+                        const aDiv = document.createElement('div');
+                        aDiv.className = 'aisle';
+                        row.appendChild(aDiv);
+                    } else {
+                        const id = r + p;
+                        if (!data[id]) data[id] = { name: '', orders: [] };
+                        const d = data[id];
+                        const sDiv = document.createElement('div');
+                        sDiv.className = `seat ${d.orders.length ? 'has-order' : ''}`;
+                        sDiv.onclick = () => openP(id);
+                        sDiv.innerHTML = `
+                            <div style="display:flex"><span class="seat-label">${id}</span><span class="pax-name">${d.name}</span></div>
+                            <div class="order-display">${d.orders.map(i => '• ' + i).join('<br>')}</div>
+                        `;
+                        row.appendChild(sDiv);
+                    }
+                });
+                container.appendChild(row);
+            }
+        }
+
+        function openP(id) {
+            selS = id; if(!data[id]) data[id] = {name:'', orders:[]};
+            document.getElementById('p-title').innerText = `Seat ${id}`;
+            document.getElementById('p-name').value = data[id].name;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('order-panel').classList.add('open');
+            togMeal();
+        }
+
+        function setCarrier(c) {
+            currC = c; 
+            document.querySelectorAll('.carrier-btn').forEach(b => b.classList.toggle('active', b.classList.contains(c.toLowerCase())));
+            const sD = document.getElementById('m-soft'), aD = document.getElementById('m-alc');
+            sD.innerHTML = ''; aD.innerHTML = '';
+            menus[c].s.forEach(i => {
+                const b = document.createElement('button'); b.className = 'menu-item'; b.innerText = i;
+                b.onclick = () => i.toLowerCase().match(/coffee|starbucks|illy|tea/) ? openCoff() : openGen(i, 'soft');
+                sD.appendChild(b);
+            });
+            menus[c].a.forEach(i => {
+                const b = document.createElement('button'); b.className = 'menu-item'; b.innerText = i;
+                let t = i.toLowerCase().match(/lite|water|na|claw|sweetwater/) ? 'beer' : 'alc';
+                b.onclick = () => openGen(i, t);
+                aD.appendChild(b);
+            });
+        }
+
+        function openCoff() { cQ = {c:0, sg:0, sw:0}; upC(); document.getElementById('mod-coffee').classList.add('active'); }
+        function adj(t, d) { cQ[t] = Math.max(0, Math.min(5, cQ[t]+d)); upC(); }
+        function upC() { document.getElementById('v-c').innerText = cQ.c; document.getElementById('v-sg').innerText = cQ.sg; document.getElementById('v-sw').innerText = cQ.sw; }
+        
+        function saveCoffee() {
+            let p = [], l = currC === 'DL' ? 'Starbucks' : (currC === 'UA' ? 'illy' : 'Coffee');
+            if(cQ.c) p.push(cQ.c+' Cr'); if(cQ.sg) p.push(cQ.sg+' Sug'); if(cQ.sw) p.push(cQ.sw+' Swt');
+            addOrder(p.length ? `${l} (${p.join('/')})` : l); closeMod();
+        }
+
+        function openGen(i, t) {
+            pItem = i; const g = document.getElementById('gen-options'); g.innerHTML = '';
+            document.getElementById('gen-title').innerText = i;
+            mods[t].forEach(m => {
+                const b = document.createElement('button'); b.className = 'menu-item'; b.innerText = m;
+                b.onclick = () => { addOrder(`${pItem} (${m})`); closeMod(); };
+                g.appendChild(b);
+            });
+            document.getElementById('mod-gen').classList.add('active');
+        }
+
+        function addOrder(i) { data[selS].orders.push(i); render(); }
+        
+        function addMeal(t) {
+            if(t === 'Option A' && mA > 0) { mA--; addOrder('Option A'); }
+            else if(t === 'Option B' && mB > 0) { mB--; addOrder('Option B'); }
+            upInv();
+        }
+
+        function upInv() {
+            document.getElementById('cA').innerText = mA; document.getElementById('cB').innerText = mB;
+            document.getElementById('bA').disabled = mA <= 0; document.getElementById('bB').disabled = mB <= 0;
+        }
+
+        function togMeal() {
+            let en = document.getElementById('mTog').checked;
+            document.getElementById('inv-bar').style.display = en ? 'flex' : 'none';
+            document.getElementById('m-ui').style.display = en ? 'block' : 'none';
+            upInv();
+        }
+
+        function setInv() { 
+            let nA = prompt("Opt A count?", mA);
+            let nB = prompt("Opt B count?", mB);
+            if(nA !== null) mA = parseInt(nA);
+            if(nB !== null) mB = parseInt(nB);
+            upInv(); 
+        }
+
+        function closeMod() { document.querySelectorAll('.mod-panel').forEach(p=>p.classList.remove('active')); }
+        function closePanel() { 
+            data[selS].name = document.getElementById('p-name').value; 
+            document.getElementById('order-panel').classList.remove('open'); 
+            document.getElementById('overlay').style.display = 'none'; 
+            closeMod(); render(); 
+        }
+
+        function clearSeat() { 
+            data[selS].orders.forEach(i => { if(i==='Option A') mA++; if(i==='Option B') mB++; }); 
+            data[selS].orders = []; upInv(); render(); 
+        }
+
+        function resetAll() { if(confirm("Reset?")) { data = {}; mA = 7; mB = 5; render(); upInv(); } }
+
+        window.onload = function() {
+            setCarrier('AA');
+            render();
+        };
+
+    </script>
+</body>
+</html>
+    <script  src="./script.js"></script>
+
+  </body>
+  
+</html>
