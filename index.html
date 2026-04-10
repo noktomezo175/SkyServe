@@ -158,25 +158,25 @@
                 }
             },
             DL: { 
-                soda: ["Coke", "Coke Zero", "Diet Coke", "Fresca", "Ginger Ale"],
-                juice: ["OJ", "Apple", "Tomato", "Cranberry"],
-                mixers: [],
+                soda: ["Coke", "Diet Coke", "Coke Zero", "Ginger Ale","Sprite"],
+                juice: ["OJ", "Apple", "Cranberry"],
+                mixers: ["Club","Tonic","BMM"],
                 alc: {
-                    beer: ["SweetWater"],
-                    wine: ["Wine"],
-                    sparkling: [],
-                    liquor: ["Buffalo Trace", "Bombay", "Tip Top Marg", "Tip Top Espresso"]
+                    beer: ["Miller Lite","Sweetwater","Voodoo Ranger"],
+                    wine: ["White","Red"],
+                    sparkling: ["Sparkling"],
+                    liquor: ["Buffalo Trace", "Gin","Rum","Bourbon Cream","Scotch","Jack","Tequila","Vodka"]
                 }
             },
             UA: { 
-                soda: ["Coke", "Zero Sugar", "Diet Coke", "Sprite", "Ginger Ale"],
-                juice: ["Tomato J", "OJ", "Apple", "Cranberry"],
-                mixers: ["AHA Spark"],
+                soda: ["Coke", "Coke Zero", "Diet Coke", "Sprite", "Ginger Ale"],
+                juice: ["Tomato", "OJ", "Apple", "Cranberry"],
+                mixers: ["Club"],
                 alc: {
                     beer: ["Miller Lite", "White Claw"],
-                    wine: ["Wine"],
+                    wine: ["White","Red"],
                     sparkling: [],
-                    liquor: ["Wheatley", "Jack", "Buffalo Trace"]
+                    liquor: ["Vodka", "Jack", "Buffalo Trace"]
                 }
             }
         };
@@ -199,9 +199,9 @@
             if (isReversed) rowNums.reverse();
 
             // Delta uses A,B,C. UA/AA uses A,D,F
-            let seatLayout = currC === 'DL' ? ['A', 'B', 'aisle', 'C', 'D'] : ['A', 'aisle', 'D', 'F']; 
+            let seatLayout = currC === 'DL' ? ['A', 'B', 'aisle', 'C',] : ['A', 'aisle', 'D', 'F']; 
             // Delta specific adjustment: if you strictly meant 3 seats 'A','B','C', we use:
-            if (currC === 'DL') seatLayout = ['A', 'B', 'aisle', 'C']; 
+            if (currC === 'DL') seatLayout = ['A','aisle', 'B', 'C']; 
 
             if (isReversed) seatLayout.reverse();
 
